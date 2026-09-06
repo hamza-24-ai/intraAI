@@ -1,0 +1,68 @@
+# ==========================================
+# 1. Environment Variables & Secrets (CRITICAL)
+# ==========================================
+# Kisi bhi qism ki secret keys ya .env files ko block karne ke liye
+.env
+.env.[a-zA-Z]*
+!.env.example
+*.pem
+*.key
+certs/
+
+# ==========================================
+# 2. Python & Backend (FastAPI / LangChain)
+# ==========================================
+# Virtual Environment aur uski files (Aapka venv folder)
+backend/venv/
+backend/ENV/
+backend/env/
+
+# Python cache aur compiled files
+**/__pycache__/
+*.py[cod]
+*$py.class
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+
+# Databases (Agar aap local database use kar rahe hain)
+*.db
+*.sqlite3
+
+# Logs & OS Files
+*.log
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# 3. Frontend (React / Vite / Next.js)
+# ==========================================
+# Heavy dependencies folder
+frontend/node_modules/
+frontend/jspm_packages/
+
+# Production build outputs
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+
+# Frontend logs aur cache
+frontend/.eslintcache
+frontend/.stylelintcache
+frontend/.parcel-cache
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+
+# ==========================================
+# 4. Editors & IDEs (VS Code / PyCharm)
+# ==========================================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
