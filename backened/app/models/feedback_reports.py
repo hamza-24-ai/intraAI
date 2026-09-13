@@ -17,4 +17,4 @@ class FeedBack_Report(Base):
     generated_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
-    feedback = relationship("Interview_Session", back_populates="feedback")
+    feedback = relationship("Interview_Session", back_populates="interSession")

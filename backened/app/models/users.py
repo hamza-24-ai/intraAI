@@ -16,3 +16,4 @@ class User(Base):
 
 
     resumes = relationship("Resume", back_populates="user")
+    interviews = relationship("Interview_Session", back_populates="user")

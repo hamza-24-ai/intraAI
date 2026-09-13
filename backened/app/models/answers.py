@@ -14,8 +14,9 @@ class Answer(Base):
     audio_url = Column(String, nullable=True)
     response_time_seconds = Column(Float, nullable=True)
     was_skipped = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.utcnow())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    answer = relationship("Question", back_populates="question")
+    answer = relationship("Question", back_populates="questionss")
+    answers = relationship("Evaluation", back_populates="evaluation")
 
     

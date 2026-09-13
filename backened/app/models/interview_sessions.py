@@ -45,12 +45,14 @@ class Interview_Session(Base):
     duration_minutes = Column(Integer)
     status = Column(Enum(Status, name="status", default=Status.in_progress), nullable=False)
 
-    started_at = Column(DateTime, default=datetime.utcnow)
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
     ended_at = Column(DateTime, nullable=True)
 
 
     user = relationship("User", back_populates="interviews")
     resume = relationship("Resume", back_populates="interviews")
+    session = relationship("Question", back_populates="question")
+    interSession = relationship("FeedBack_Report", back_populates="feedback")
 
 
 

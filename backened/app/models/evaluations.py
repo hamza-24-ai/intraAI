@@ -14,6 +14,6 @@ class Evaluation(Base):
     evaluation_summary = Column(Text)
     skill_gap_notes = Column(String , nullable=True)
 
-    evaluation = relationship("Answer", back_populates="evaluation")
+    evaluation = relationship("Answer", back_populates="answers")
 
     
