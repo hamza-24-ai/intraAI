@@ -15,6 +15,9 @@ class Agent_Pipeline(TypedDict):
     projects : List[str]
     error : Optional[str] = None
     is_valid_file : bool
+    question_sets : List[dict]
+    raw_answer_transcript : str
+    clean_answer_transcript : str
 
     needs_manual_role_input : bool
 
