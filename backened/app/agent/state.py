@@ -19,5 +19,15 @@ class Agent_Pipeline(TypedDict):
     raw_answer_transcript : str
     clean_answer_transcript : str
 
+    # repeat classifier agent
+    is_repeat_request : bool
+    reach_count_current_question : int
+    reach_limit : bool
+
+    # Answer Evaluation Agent
+    current_question : str
+    current_evaluation : dict
+    all_evaluation : List[dict]
+
     needs_manual_role_input : bool
 
