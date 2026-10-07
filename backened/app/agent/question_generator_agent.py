@@ -4,7 +4,8 @@ from langchain_core.output_parsers import StrOutputParser,JsonOutputParser
 import os 
 import json 
 from app.agent.state import Agent_Pipeline
-from langchain_community.tools.tavily_search import TavilySearchResults
+# from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_tavily import TavilyResearch
 from pydantic import BaseModel,Field
 from dotenv import load_dotenv
 from typing import List
@@ -30,7 +31,7 @@ llm = ChatGroq(
 
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
-tavily_search = TavilySearchResults(
+tavily_search = TavilyResearch(
     api_key=TAVILY_API_KEY,
     max_results=5
 )

@@ -28,6 +28,26 @@ class Agent_Pipeline(TypedDict):
     current_question : str
     current_evaluation : dict
     all_evaluation : List[dict]
+    next_action : str
+    # Live Interview per turn
+    interveiw_type : str
+    difficulty_level : str
+    current_skill : str
+    was_skipped : bool
+    last_speech_end_transcript : Optional[float]
+
+    # Final Report
+    final_feedback_report : dict
+
+    # Ended Interview checker 
+    is_interview_ended : bool
+
+    # handling interview time 
+    session_start_timestamp: Optional[float]  
+    duration_minutes: int                      
+    questions_asked_count: int                  
+    interview_ended: bool
+    end_reason: Optional[str] 
 
     needs_manual_role_input : bool
 
