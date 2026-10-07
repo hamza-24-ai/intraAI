@@ -12,6 +12,8 @@ from app.models.feedback_reports import FeedBack_Report
 from app.models.evaluations import Evaluation
 from app.models.answers import Answer
 
+# Import all Routers 
+from app.routers import auth
 
 
 app = FastAPI(title="IntraAI => MockUp Interview MultiAgent")
@@ -21,6 +23,9 @@ app = FastAPI(title="IntraAI => MockUp Interview MultiAgent")
 
 Base.metadata.create_all(bind=engine)
 
+# Making routers workAble
+
+app.include_router(auth.router)
 
 # Return API 
 
