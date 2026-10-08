@@ -2,6 +2,7 @@ import cloudinary
 import cloudinary.uploader
 from dotenv import load_dotenv
 import os 
+import uuid
 
 load_dotenv()
 
@@ -18,10 +19,14 @@ cloudinary.config(
 
 
 def upload_transcript(file_bytes: bytes, filename: str):
+
+    ext = os.path.splitext(filename,"")[1].lower()
+    public_id = f"intraAI{uuid.uuid4().hex}{ext}"
+
     result = cloudinary.uploader.upload(
         file_bytes,
         resource_type="raw",
-        folder="intraAI",
+        public_id=public_id
     )
     return result["secure_url"], result["public_id"]
 
