@@ -51,3 +51,8 @@ class Agent_Pipeline(TypedDict):
 
     needs_manual_role_input : bool
 
+    # new endpoints 
+
+    skill_index : Optional[int] = 0
+    asked_questions : Optional[List[str]] = []
+

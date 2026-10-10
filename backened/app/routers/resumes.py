@@ -4,7 +4,7 @@ from app.cores.cloudinary import delete_transcript, upload_transcript
 from app.models.resumes import Resume
 from app.schemas.resume import ResumeResponse
 from app.cores.database import get_db
-from app.cores.auth_dependancy import get_current_user_optional, get_current_user
+from app.cores.auth_dependancy import get_current_user_optional, get_current_user, get_optional_db_user, get_db_user
 import os
 from app.agent.file_info import extracter_file_data
 # from app.agent.state import Agent_Pipeline
@@ -21,7 +21,8 @@ MAX_File = 5*1024*1024
 def resume_upload(
     file : UploadFile = File(...),
     db : Session = Depends(get_db),
-    current_user = Depends(get_current_user_optional)
+    current_user = Depends(get_current_user_optional),
+    db_user = Depends(get_optional_db_user)
 ):
 
     content = file.file.read()
@@ -34,7 +35,7 @@ def resume_upload(
 
     file_url,_ = upload_transcript(content,file.filename)
 
-    user_id = int(current_user.id) if current_user else ""
+    user_id = int(db_user.id) if current_user else ""
 
     state1 = {
         "user_id" : user_id,
@@ -75,7 +76,7 @@ def resume_upload(
     resume = None
     if current_user:
         resume = Resume(
-            user_id = uuid.UUID(current_user.id),
+            user_id = user_id,
             file_url = file_url,
             parsed_skills = parsed
 
@@ -101,11 +102,11 @@ def resume_upload(
 @router.get("/", List[ResumeResponse])
 def list_resumes(
     db : Session = Depends(get_db),
-    current_user = Depends(get_current_user) 
+    current_user = Depends(get_db_user) 
 ):
 
     return (
-        db.query(Resume).filter(Resume.user_id == uuid.UUID(current_user.id)).order_by(Resume.uploaded_at.desc()).all()
+        db.query(Resume).filter(Resume.user_id == current_user.id).order_by(Resume.uploaded_at.desc()).all()
     )
 
 
@@ -116,11 +117,11 @@ def list_resumes(
 def resume_by_id(
     resume_id = uuid.UUID,
     db : Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_db_user)
 ):
 
     resume = (
-        db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == uuid.UUID(current_user.id)).first()
+        db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == current_user.id).first()
     )
 
     if resume is None:

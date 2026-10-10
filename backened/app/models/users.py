@@ -9,12 +9,13 @@ class User(Base):
     __tablename__ = "user"
 
     id = Column(Integer,primary_key=True, index=True)
+    supabase_user_id = Column(String, unique=True, nullable=False, index=True)
     name = Column(String, nullable=False)
     email = Column(String,unique=True, index=True, nullable=False)
-    password_hash = Column(String, nullable=False,unique=True)
-    is_verified = Column(Boolean, default=False, nullable=False)
-    verification_token = Column(String, nullable=True)
-    token_expires_at = Column(DateTime, nullable=True)
+    # password_hash = Column(String, nullable=False,unique=True)
+    # is_verified = Column(Boolean, default=False, nullable=False)
+    # verification_token = Column(String, nullable=True)
+    # token_expires_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 

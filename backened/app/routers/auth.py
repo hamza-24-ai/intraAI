@@ -1,6 +1,10 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from app.schemas.user import CreateUser,LoginUser,CreateToken
 from app.cores.supabase_client import supabase
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from app.cores.database import get_db
+from app.models.users import User
 
 
 
@@ -10,7 +14,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 # writing routers to crearte SignUp
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
-def signup(data : CreateUser):
+def signup(data : CreateUser, db : Session = Depends(get_db)):
     try:
         response = supabase.auth.sign_up({
             "email" : data.email,
@@ -34,6 +38,19 @@ def signup(data : CreateUser):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Sign Up Failed Please Try again"
         )
+
+    try:
+        db.add(
+            User(
+                supabase_user_id = response.user.id,
+                name = data.name,
+                email = data.email
+            )
+        )
+        db.commit()
+        db.refresh(User)
+    except IntegrityError:
+        db.rollback()
 
     return {
         "message" : "SignUp Successfully Please check your email to verify your account",
