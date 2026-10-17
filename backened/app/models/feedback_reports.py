@@ -1,8 +1,7 @@
-from sqlalchemy import Column,Integer,String,DateTime,ForeignKey, Enum, Float, Text
+from sqlalchemy import Column,Integer,String,DateTime,ForeignKey, Enum, Float, Text, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.cores.database import Base
-
 
 class FeedBack_Report(Base):
 
@@ -14,6 +13,7 @@ class FeedBack_Report(Base):
     strengths = Column(Text, nullable=True)
     weaknesses = Column(Text, nullable=True)
     improvement_suggestions = Column(Text, nullable=True)
+    skill_gap_notes = Column(JSON, nullable=True)
     generated_at = Column(DateTime(timezone=True), server_default=func.now())
 
 

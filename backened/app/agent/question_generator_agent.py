@@ -144,7 +144,7 @@ def question_generator_agent(state : Agent_Pipeline) -> Agent_Pipeline:
                 "search_context" : search_context,
                 "skill" : skill,
                 "target_role" : target_role,
-                "difficulty_level" : "intermediate | deep"
+                "difficulty_level" : state.get("difficulty_level","intermediate"),
 
                 })
         except Exception:

@@ -99,7 +99,8 @@ def resume_upload(
 
 # Get data only if user login here 
 
-@router.get("/", List[ResumeResponse])
+
+@router.get("/", response_model=List[ResumeResponse])
 def list_resumes(
     db : Session = Depends(get_db),
     current_user = Depends(get_db_user) 

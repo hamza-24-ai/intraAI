@@ -4,10 +4,11 @@ from datetime import datetime
 
 
 class FeedbackBase(BaseModel):
-    overall_score : Optional[float] = None
-    strengths : Optional[str] = None
-    weaknesses : Optional[str] = None
-    improvement_suggestions : Optional[str] = None
+    overall_score : Optional[list] = []
+    strengths : Optional[list] = []
+    weaknesses : Optional[list] = []
+    improvement_suggestions : Optional[list] = []
+    skill_gap_notes : Optional[list] = []
 
 
 class FeedbackCreate(FeedbackBase):
