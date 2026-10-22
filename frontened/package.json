@@ -12,6 +12,7 @@
     "@base-ui/react": "^1.9.0",
     "@hookform/resolvers": "^5.9.2",
     "@ricky0123/vad-web": "^0.0.31",
+    "axios": "^1.20.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",
     "framer-motion": "^14.3.0",

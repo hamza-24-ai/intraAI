@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.cores.database import engine,Base
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
@@ -31,6 +32,15 @@ app.include_router(questions.router)
 app.include_router(interview_sessions.router)
 app.include_router(live_interview.router)
 app.include_router(feedback.router)
+
+# Connect with frontened through cors 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Return API 
 
