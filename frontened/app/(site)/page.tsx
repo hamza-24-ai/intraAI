@@ -1,20 +1,27 @@
-// src/app/(site)/page.tsx  (Phase 3 mein asli Home se replace hoga)
-import { Aurora } from "@/components/ui/aurora";
-import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Reveal } from "@/components/ui/reveal";
+// src/app/(site)/page.tsx
+import { FaqSection } from "@/components/home/faq-section";
+import { FeaturesSection } from "@/components/home/features-section";
+import { FinalCta } from "@/components/home/final-cta";
+import { Hero } from "@/components/home/hero";
+import { HowItWorks } from "@/components/home/how-it-works";
+import { ModesSection } from "@/components/home/modes-section";
+import { OrbDemoSection } from "@/components/home/orb-demo-section";
+import { ProblemSection } from "@/components/home/problem-section";
+import { TrustStrip } from "@/components/home/trust-strip";
 
-export default function Home() {
+// Backgrounds alternate exactly: Mint, White, Mint, White, Emerald, Mint, White, Mint, Violet, (Mint footer)
+export default function HomePage() {
   return (
-    <section className="relative isolate px-4 py-24">
-      <Aurora />
-      <Reveal className="mx-auto max-w-xl">
-        <GlassCard className="p-8">
-          <h1 className="text-3xl font-bold">Practice the interview before it counts.</h1>
-          <p className="mt-3 text-slate-dark">Setup check: the real Home page comes in Phase 3.</p>
-          <Button className="mt-6">Upload your resume</Button>
-        </GlassCard>
-      </Reveal>
-    </section>
+    <>
+      <Hero />
+      <TrustStrip />
+      <ProblemSection />
+      <HowItWorks />
+      <ModesSection />
+      <FeaturesSection />
+      <OrbDemoSection />
+      <FaqSection />
+      <FinalCta />
+    </>
   );
 }
