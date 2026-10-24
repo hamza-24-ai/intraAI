@@ -40,6 +40,7 @@ interface InterviewState {
   report: FeedbackReport | null;
   endReason: string | null;
   reportDetail: string | null;
+  aiAudioPlaying: boolean;
 
   setPhase: (p: InterviewPhase) => void;
   setConfig: (c: InterviewConfig) => void;
@@ -52,6 +53,7 @@ interface InterviewState {
   setNotice: (n: string | null) => void;
   setError: (e: string) => void;
   setReport: (r: FeedbackReport | null, endReason: string | null, detail: string | null) => void;
+  setAiAudioPlaying: (v: boolean) => void;
   reset: () => void;
 }
 
@@ -73,6 +75,7 @@ const initial = {
   report: null,
   endReason: null,
   reportDetail: null,
+  aiAudioPlaying: false,
 };
 
 export const useInterviewStore = create<InterviewState>()((set) => ({
@@ -102,6 +105,7 @@ export const useInterviewStore = create<InterviewState>()((set) => ({
   setError: (error) => set({ error, phase: "error" }),
   setReport: (report, endReason, reportDetail) =>
     set({ report, endReason, reportDetail, phase: "finished" }),
+  setAiAudioPlaying: (aiAudioPlaying) => set({ aiAudioPlaying }),
 
   reset: () => set(initial),
 }));

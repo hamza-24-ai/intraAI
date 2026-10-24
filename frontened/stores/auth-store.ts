@@ -29,7 +29,8 @@ export const useAuthStore = create<AuthState>()(
       setHasHydrated: (v) => set({ hasHydrated: v }),
     }),
     {
-      name: "sahulat-auth",
+      name: "IntraAI",
+       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({ accessToken: s.accessToken, refreshToken: s.refreshToken, user: s.user }),
       onRehydrateStorage: () => (state) => state?.setHasHydrated(true),

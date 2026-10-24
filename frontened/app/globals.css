@@ -4,7 +4,186 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ===== Brand tokens ===== */
+
+@theme {
+  --color-brand-emerald: #2CBF8B;
+  --color-brand-violet: #6A2FD4;
+  --color-brand-gray: #7B7E88;
+  --color-ink: #15171C;
+  --color-mint: #E6F8F1;
+  --color-mint-soft: #F3FBF8;
+  --color-violet-light: #EFE9FC;
+  --color-slate-light: #E9EAEE;
+  --color-mid: #4A7FC0;
+  --color-emerald-dark: #0A6B4A;
+  --color-slate-dark: #565963;
+  --color-violet-deep: #4B1FA3;
+  --color-error: #B42318;
+  --color-error-tint: #FDECEA;
+  --color-warning: #8A5A00;
+  --color-warning-tint: #FFF4D6;
+
+  --font-display: var(--font-jakarta), system-ui, "Segoe UI", Arial, sans-serif;
+  --font-sans: var(--font-inter), system-ui, "Segoe UI", Arial, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --shadow-sm: 0 2px 8px rgb(106 47 212 / 0.10);
+  --shadow-md: 0 8px 24px rgb(106 47 212 / 0.12);
+  --shadow-lg: 0 20px 60px rgb(106 47 212 / 0.16);
+}
+
+/* ===== shadcn variables mapped to the brand (replaces shadcn's :root) ===== */
+:root {
+  --radius: 0.75rem;
+  --background: #ffffff;
+  --foreground: #15171C;
+  --card: #ffffff;
+  --card-foreground: #15171C;
+  --popover: #ffffff;
+  --popover-foreground: #15171C;
+  --primary: #2CBF8B;
+  --primary-foreground: #15171C;   /* Ink on Emerald, never white */
+  --secondary: #6A2FD4;
+  --secondary-foreground: #ffffff;
+  --muted: #E9EAEE;
+  --muted-foreground: #565963;
+  --accent: #EFE9FC;
+  --accent-foreground: #4B1FA3;
+  --destructive: #B42318;
+  --border: #7B7E88;
+  --input: #7B7E88;
+  --ring: #6A2FD4;
+}
+
 @theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* ===== Base (replaces shadcn's @layer base) ===== */
+@layer base {
+  * { @apply border-border; }
+
+  html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+  body { @apply bg-mint text-ink font-sans antialiased; }
+  h1, h2, h3, h4 { @apply font-display tracking-tight; }
+
+  *:focus-visible { outline: 3px solid var(--color-brand-violet); outline-offset: 2px; }
+  [data-surface="emerald"] *:focus-visible { outline-color: var(--color-ink); }
+  [data-surface="violet"] *:focus-visible { outline-color: #ffffff; }
+}
+
+/* ===== Flowing-water border ===== */
+@property --flow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes flow-spin { to { --flow-angle: 360deg; } }
+@keyframes flow-line { to { background-position-x: 600px; } }
+@keyframes aurora-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(40px, 30px, 0); }
+}
+
+@layer components {
+  .flow-border {
+    --flow-radius: 16px;
+    --flow-width: 2px;
+    --flow-speed: 6s;
+    --flow-a: #2CBF8B;
+    --flow-b: #4A7FC0;
+    --flow-c: #6A2FD4;
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--flow-radius);
+  }
+  .flow-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: var(--flow-width);
+    border-radius: inherit;
+    background: conic-gradient(
+      from var(--flow-angle),
+      var(--flow-a), var(--flow-b), var(--flow-c), var(--flow-b), var(--flow-a)
+    );
+    /* keep only the ring, the inside stays transparent */
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: flow-spin var(--flow-speed) linear infinite;
+  }
+
+  /* modifiers */
+  .flow-deep    { --flow-a: #0A6B4A; --flow-c: #4B1FA3; }   /* keeps 3:1 on white (inputs, buttons) */
+  .flow-invalid { --flow-a: #B42318; --flow-b: #B42318; --flow-c: #B42318; }
+  .flow-slow    { --flow-speed: 10s; }
+  .flow-fast    { --flow-speed: 3s; }
+
+  /* flows only while hovered / focused */
+  .flow-on-hover::before { animation-play-state: paused; }
+  .flow-on-hover:hover::before,
+  .flow-on-hover:focus-within::before { animation-play-state: running; }
+  .flow-on-hover:focus-within { outline: 3px solid var(--color-brand-violet); outline-offset: 2px; }
+
+  /* flowing divider (navbar bottom, footer top, section dividers) */
+  .flow-line {
+    height: 2px;
+    background: linear-gradient(90deg, #2CBF8B, #4A7FC0, #6A2FD4, #4A7FC0, #2CBF8B);
+    background-size: 600px 100%;
+    background-repeat: repeat-x;
+    animation: flow-line 8s linear infinite;
+  }
+
+  /* aurora blobs (radial gradients, no heavy blur filters) */
+  .aurora-blob { position: absolute; border-radius: 9999px; will-change: transform; animation: aurora-drift 20s ease-in-out infinite alternate; }
+  .aurora-emerald { width: 520px; height: 520px; top: -10%; left: -8%;  background: radial-gradient(circle, rgb(44 191 139 / 0.55), transparent 70%); }
+  .aurora-violet  { width: 600px; height: 600px; top: 10%;  right: -12%; background: radial-gradient(circle, rgb(106 47 212 / 0.45), transparent 70%); animation-duration: 26s; animation-delay: -6s; }
+  .aurora-mid     { width: 400px; height: 400px; bottom: -10%; left: 30%; background: radial-gradient(circle, rgb(74 127 192 / 0.35), transparent 70%); animation-duration: 22s; animation-delay: -12s; }
+}
+
+@media (max-width: 599px) {
+  .aurora-emerald { width: 320px; height: 320px; }
+  .aurora-violet  { width: 360px; height: 360px; }
+  .aurora-mid     { width: 260px; height: 260px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.2ms !important;
+  }
+}
+
+/* @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -127,4 +306,4 @@
   html {
     @apply font-sans;
   }
-}
+} */

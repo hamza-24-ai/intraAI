@@ -45,11 +45,15 @@ export function useLiveInterview() {
   const handleAudio = useCallback(
     async (buffer: ArrayBuffer) => {
       vadRef.current?.pause();
-      useInterviewStore.getState().setPhase("speaking");
+      const store = useInterviewStore.getState();
+      store.setPhase("speaking");
       try {
+        store.setAiAudioPlaying(true);
         await playerRef.current?.play(buffer);
       } catch {
         /* decode/play failed: carry on so the server isn't left waiting */
+      } finally {
+        store.setAiAudioPlaying(false);
       }
       send({ type: "playback_done" });
       beginListening();
@@ -206,5 +210,7 @@ export function useLiveInterview() {
 
   useEffect(() => cleanup, [cleanup]); // close everything when the page unmounts
 
-  return { start, sendTextAnswer, endInterview, cleanup };
+  const getAiAnalyser = useCallback(() => playerRef.current?.getAnalyser() ?? null, []);
+
+  return { start, sendTextAnswer, endInterview, cleanup, getAiAnalyser };
 }
