@@ -43,6 +43,14 @@ export const signupFormSchema = z
 export type SignupForm = z.infer<typeof signupFormSchema>;
 export type SignupPayload = Omit<SignupForm, "confirmPassword">;
 
+export const resendFormSchema = z.object({
+  email: z.string().email("Enter a valid email"),
+});
+export type ResendForm = z.infer<typeof resendFormSchema>;
+
+export const resendResponseSchema = z.object({ message: z.string() });
+export type ResendResponse = z.infer<typeof resendResponseSchema>;
+
 export const signupResponseSchema = z.object({ message: z.string() });
 export const loginResponseSchema = z.object({
   access_token: z.string(),

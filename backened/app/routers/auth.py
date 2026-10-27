@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.cores.database import get_db
 from app.models.users import User
+from pydantic import BaseModel, EmailStr
+
+FRONTEND_URL =  "http://localhost:3000"
 
 
 
@@ -22,7 +25,8 @@ def signup(data : CreateUser, db : Session = Depends(get_db)):
             "options" : {
                 "data" : {
                     "name" : data.name
-                }
+                },
+                "email_redirect_to": f"{FRONTEND_URL}/verify",
             }
         }) 
 
@@ -90,3 +94,24 @@ def signin(data : LoginUser):
         "user_id": response.user.id,
         "email": response.user.email,
     }
+
+
+    # Resend Verification 
+class ResendRequest(BaseModel):
+    email: EmailStr
+
+
+@router.post("/resend-verification")
+def resend_verification(payload: ResendRequest):
+    try:
+        supabase.auth.resend({
+            "type": "signup",
+            "email": payload.email,
+            "options": {"email_redirect_to": f"{FRONTEND_URL}/verify"},
+        })
+    except Exception as e:
+        text = str(e).lower()
+        if "rate" in text or "seconds" in text or "too many" in text:
+            raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Please wait a minute before requesting another email.")
+        # any other error: stay silent so this endpoint can't reveal which emails are registered
+    return {"message": "If this email is registered and not yet verified, a new link has been sent."}

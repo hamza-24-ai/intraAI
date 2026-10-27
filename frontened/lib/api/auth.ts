@@ -2,6 +2,7 @@
 import { api } from "@/lib/api/client";
 import {
   loginResponseSchema,
+  resendResponseSchema,
   signupResponseSchema,
   type LoginInput,
   type SignupPayload,
@@ -14,6 +15,11 @@ import { useResumeStore } from "@/stores/resume-store";
 export async function signup(payload: SignupPayload): Promise<string> {
   const { data } = await api.post("/auth/signup", payload);
   return signupResponseSchema.parse(data).message;
+}
+
+export async function resendVerification(email: string): Promise<string> {
+  const { data } = await api.post("/auth/resend-verification", { email });
+  return resendResponseSchema.parse(data).message;
 }
 
 export async function login(input: LoginInput) {

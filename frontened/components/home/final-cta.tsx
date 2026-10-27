@@ -33,9 +33,18 @@ export function FinalCta() {
         <p className="mt-4 text-lg text-white">
           Upload your resume, speak your answers, get honest feedback. Free, no login.
         </p>
-        <Button size="lg" className="mt-8 w-full sm:w-auto">
-          <Link href="/resume">
+        {/* <Button size="lg" className="mt-8 w-full sm:w-auto">
+          <Link href="/resume" className="flex gap-2">
             <Upload /> Upload your resume
+          </Link>
+        </Button> */}
+        <Button size="lg" className="mt-8 w-full sm:w-auto">
+          <Link
+            href="/resume"
+            className="flex items-center justify-center gap-2"
+          >
+            <Upload className="h-5 w-5 shrink-0" />
+            <span>Upload your resume</span>
           </Link>
         </Button>
       </motion.div>
