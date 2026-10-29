@@ -28,6 +28,7 @@ export function SegmentedControl<T extends string>({
   const id = useId();
   const reduce = useReducedMotion();
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
+  const selectedIndex = options.findIndex((option) => option.value === value);
 
   const onKeyDown = (e: React.KeyboardEvent, index: number) => {
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
@@ -41,10 +42,14 @@ export function SegmentedControl<T extends string>({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className={cn("inline-flex rounded-full bg-slate-light p-1", className)}
+      className={cn(
+        "inline-flex max-w-full overflow-x-auto rounded-full bg-slate-light p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        className
+      )}
     >
       {options.map((option, i) => {
         const selected = option.value === value;
+        const tabbable = selected || (selectedIndex === -1 && i === 0);
         return (
           <button
             key={option.value}
@@ -54,7 +59,7 @@ export function SegmentedControl<T extends string>({
             type="button"
             role="radio"
             aria-checked={selected}
-            tabIndex={selected ? 0 : -1}
+            tabIndex={tabbable ? 0 : -1}
             onClick={() => onChange(option.value)}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(

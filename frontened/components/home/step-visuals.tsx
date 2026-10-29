@@ -145,6 +145,7 @@ export function VoiceVisual({ active }: { active: boolean }) {
   const [replay, setReplay] = useState(0);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- replay key resets when the step becomes active
     if (active) setReplay((r) => r + 1);
   }, [active]);
 
@@ -192,6 +193,7 @@ function useCountUp(target: number) {
 
   useEffect(() => {
     if (reduce) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- jump straight to the final score when motion is reduced
       setN(target);
       return;
     }

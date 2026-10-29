@@ -11,7 +11,8 @@ import { useResumeStore } from "@/stores/resume-store";
 
 export async function uploadResume(
   file: File,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  signal?: AbortSignal
 ): Promise<UploadResumeResponse> {
   const problem = validateResumeFile(file);
   if (problem) throw new Error(problem);
@@ -19,8 +20,9 @@ export async function uploadResume(
   const form = new FormData();
   form.append("file", file); // axios sets the multipart boundary itself
 
-  const { data } = await api.post("/resumes/upload", form, {
+  const { data } = await api.post("/resume/upload", form, {
     timeout: 90_000, // upload + parsing
+    signal,
     onUploadProgress: (e) => {
       if (e.total) onProgress?.(Math.round((e.loaded * 100) / e.total));
     },
@@ -38,11 +40,11 @@ export async function uploadResume(
 }
 
 export async function listResumes(): Promise<Resume[]> {
-  const { data } = await api.get("/resumes");
+  const { data } = await api.get("/resume");
   return resumeSchema.array().parse(data);
 }
 
 export async function getResume(id: number): Promise<Resume> {
-  const { data } = await api.get(`/resumes/${id}`);
+  const { data } = await api.get(`/resume/${id}`);
   return resumeSchema.parse(data);
 }

@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { FormField } from "@/components/auth/form-field";
 import { ResendButton } from "@/components/auth/resend-button";
@@ -41,6 +41,7 @@ export function VerifyView() {
       window.history.replaceState(null, "", `/verify${query}`);
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the URL is only readable after mount
     setState(parsed);
   }, []);
 
@@ -140,7 +141,7 @@ export function VerifyView() {
 function ResendEmailForm({ defaultEmail }: { defaultEmail: string }) {
   const {
     register,
-    watch,
+    control,
     trigger,
     formState: { errors },
   } = useForm<ResendForm>({
@@ -149,7 +150,7 @@ function ResendEmailForm({ defaultEmail }: { defaultEmail: string }) {
     defaultValues: { email: defaultEmail },
   });
 
-  const email = watch("email");
+  const email = useWatch({ control, name: "email" }) ?? "";
 
   return (
     <form

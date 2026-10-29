@@ -18,6 +18,7 @@ interface ResumeState {
     needsManualRole: boolean;
   }) => void;
   setTargetRole: (role: string) => void;
+  setExperienceLevel: (level: string) => void;
   setSkills: (skills: string[]) => void;
   setManualInput: (input: { skills: string[]; targetRole: string | null }) => void;
   getContextPayload: () => ContextPayload | null;
@@ -40,7 +41,14 @@ export const useResumeStore = create<ResumeState>()((set, get) => ({
     set({ fileName, resumeId, saved, parsed, needsManualRole, skillsEdited: false }),
 
   setTargetRole: (role) =>
-    set((s) => (s.parsed ? { parsed: { ...s.parsed, target_role: role.trim() || null }, needsManualRole: false } : s)),
+    set((s) =>
+      s.parsed
+        ? { parsed: { ...s.parsed, target_role: role.trim() || null, role_source: "manual" }, needsManualRole: false }
+        : s
+    ),
+
+  setExperienceLevel: (level) =>
+    set((s) => (s.parsed ? { parsed: { ...s.parsed, experience_level: level } } : s)),
 
   setSkills: (skills) =>
     set((s) => (s.parsed ? { parsed: { ...s.parsed, skills }, skillsEdited: true } : s)),

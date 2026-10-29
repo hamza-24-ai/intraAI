@@ -2,7 +2,7 @@
 
 // lib/schemas.ts
 import { z } from "zod";
-import { MAX_RESUME_BYTES } from "@/lib/constants";
+import { MAX_RESUME_BYTES, MAX_SKILLS } from "@/lib/constants";
 
 /* ---------- shared enums ---------- */
 export const difficultySchema = z.enum(["beginner", "intermediate", "technical", "deep"]);
@@ -10,10 +10,12 @@ export const interviewTypeSchema = z.enum(["technical", "behavioral"]);
 export const sessionModeSchema = z.enum(["question_bank", "live_interview"]);
 export const sessionStatusSchema = z.enum(["in_progress", "completed", "abandoned"]);
 export const durationSchema = z.union([z.literal(15), z.literal(30)]);
+export const experienceLevelSchema = z.enum(["student", "fresh_grad", "junior", "mid", "senior"]);
 
 export type Difficulty = z.infer<typeof difficultySchema>;
 export type InterviewType = z.infer<typeof interviewTypeSchema>;
 export type SessionStatus = z.infer<typeof sessionStatusSchema>;
+export type ExperienceLevel = z.infer<typeof experienceLevelSchema>;
 
 /* ---------- helpers (tolerant of LLM / nullable DB output) ---------- */
 const stringList = z.array(z.string()).nullish().transform((v) => v ?? []);
@@ -94,6 +96,17 @@ export function validateResumeFile(file: File): string | null {
   if (file.size > MAX_RESUME_BYTES) return "File too large. Max 5 MB.";
   return null;
 }
+
+/* ---------- confirm details ---------- */
+export const confirmFormSchema = z.object({
+  target_role: z.string().trim().min(2, "Enter your target role").max(60, "Keep it under 60 characters"),
+  experience_level: experienceLevelSchema,
+  skills: z
+    .array(z.string().trim().min(1).max(40))
+    .min(1, "Add at least one skill")
+    .max(MAX_SKILLS, "You can keep up to 30 skills"),
+});
+export type ConfirmForm = z.infer<typeof confirmFormSchema>;
 
 /* ---------- context sent with question-bank / interview requests ---------- */
 export const contextPayloadSchema = z.object({

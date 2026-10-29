@@ -12,7 +12,7 @@ def extracter_file_data(state : Agent_Pipeline) -> Agent_Pipeline:
 
     file_url = state["file_path"]
     url = urlparse(file_url)
-    clean_url = url.path(url)
+    clean_url = url.path
     _,ext = os.path.splitext(clean_url)
     ext = ext.lower()
 

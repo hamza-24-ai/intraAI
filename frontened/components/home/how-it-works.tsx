@@ -64,6 +64,7 @@ const ROW = 72; // px between rail nodes
 function useReplayKey(active: boolean) {
   const [key, setKey] = useState(0);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- replay key resets when the step becomes active
     if (active) setKey((k) => k + 1);
   }, [active]);
   return key;

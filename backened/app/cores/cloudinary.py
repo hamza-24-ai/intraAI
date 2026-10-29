@@ -20,7 +20,7 @@ cloudinary.config(
 
 def upload_transcript(file_bytes: bytes, filename: str):
 
-    ext = os.path.splitext(filename,"")[1].lower()
+    ext = os.path.splitext(filename)[1].lower()
     public_id = f"intraAI{uuid.uuid4().hex}{ext}"
 
     result = cloudinary.uploader.upload(

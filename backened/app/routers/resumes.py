@@ -45,7 +45,7 @@ def resume_upload(
 
     state = extracter_file_data(state1)
 
-    ext = os.path.splitext(file.filename,"")[1].lower()
+    ext = os.path.splitext(file.filename)[1].lower()
     public_id = f"intraAI{uuid.uuid4().hex}{ext}"
     if not state["is_valid_file"]:
         delete_transcript(public_id)
@@ -62,6 +62,8 @@ def resume_upload(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Data is unprocessable"
         )
+        error = state["error"]
+        print(error)
 
     parsed = {
         "skills" : state["skills"],
