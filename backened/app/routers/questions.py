@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, List
 from pydantic import AliasChoices, BaseModel, Field
 
-from app.agent.question_generator_agent import question_generator_agent
+from app.agent.question_generator_agent import ALL_SKILLS_FAILED_MESSAGE, question_generator_agent
 from app.models.interview_sessions import Interview_Session
 from app.models.questions import Question
 from app.cores.database import get_db
@@ -47,13 +47,24 @@ def generate_questions(
 
     state = question_generator_agent(state)
 
+    if state.get("error") == ALL_SKILLS_FAILED_MESSAGE:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=ALL_SKILLS_FAILED_MESSAGE
+        )
+
     if state.get("error"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Error occured due to generate questions"
         )
 
-    question_sets = state["question_sets"]
+    question_sets = state.get("question_sets") or []
+    if not question_sets:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=ALL_SKILLS_FAILED_MESSAGE
+        )
     session_id = None
 
     if db_user:

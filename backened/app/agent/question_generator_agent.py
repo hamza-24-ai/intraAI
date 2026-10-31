@@ -3,6 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser,JsonOutputParser
 import os 
 import json 
+from concurrent.futures import ThreadPoolExecutor
 from app.agent.state import Agent_Pipeline
 # from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_tavily import TavilySearch
@@ -11,6 +12,11 @@ from dotenv import load_dotenv
 from typing import List
 
 load_dotenv()
+
+MAX_SKILLS_PER_GENERATION = int(os.getenv("MAX_SKILLS_PER_GENERATION", "10"))
+MAX_CONCURRENT_SKILLS = 4
+SKILL_TASK_TIMEOUT_SECONDS = 75
+ALL_SKILLS_FAILED_MESSAGE = "Question generation failed for all skills. Please try again."
 
 # =====================================
 
@@ -24,7 +30,9 @@ GROQ_MODEL = os.getenv("GROQ_MODEL")
 llm = ChatGroq(
     api_key=GROQ_API_KEY,
     model=GROQ_MODEL,
-    temperature=0.4
+    temperature=0.4,
+    timeout=30,
+    max_retries=1,
 )
 
 # Upload Tavily api key 
@@ -131,6 +139,38 @@ def question_by_tavily(skill : str, target_role : str) -> str:
 # Agent NODE FOR LANGGRAPH CALL
 # ==============================
 
+def _prepare_skills(skills : List[str]) -> List[str]:
+    """Deduplicate case-insensitively, preserve parsed order, then cap."""
+    unique_skills = []
+    seen = set()
+
+    for raw_skill in skills:
+        skill = (raw_skill or "").strip()
+        key = skill.casefold()
+
+        if not skill or key in seen:
+            continue
+
+        seen.add(key)
+        unique_skills.append(skill)
+
+        if len(unique_skills) >= MAX_SKILLS_PER_GENERATION:
+            break
+
+    return unique_skills
+
+
+def _generate_for_skill(skill : str, target_role : str, difficulty_level : str):
+    search_context = question_by_tavily(skill, target_role)
+
+    return generated_question_by_llm.invoke({
+        "search_context" : search_context,
+        "skill" : skill,
+        "target_role" : target_role,
+        "difficulty_level" : difficulty_level,
+    })
+
+
 def question_generator_agent(state : Agent_Pipeline) -> Agent_Pipeline:
 
     if state.get("error"):
@@ -143,26 +183,52 @@ def question_generator_agent(state : Agent_Pipeline) -> Agent_Pipeline:
         state["error"] = "Skills not Found"
         return state
 
-    all_questions = []
+    processed_skills = _prepare_skills(skills)
+    print(f"skills received={len(skills)}, processing={len(processed_skills)}")
 
-    for skill in skills:
-        search_context = question_by_tavily(skill,target_role)
+    if not processed_skills:
+        state["question_sets"] = []
+        state["error"] = "Skills not Found"
+        return state
 
-        try:
-            result = generated_question_by_llm.invoke({
-                "search_context" : search_context,
-                "skill" : skill,
-                "target_role" : target_role,
-                "difficulty_level" : state.get("difficulty_level","intermediate"),
+    difficulty_level = state.get("difficulty_level", "intermediate")
+    results = [None] * len(processed_skills)
+    succeeded = 0
+    failed = 0
 
-                })
-        except Exception:
-            continue
+    executor = ThreadPoolExecutor(max_workers=MAX_CONCURRENT_SKILLS)
+    futures = [
+        executor.submit(_generate_for_skill, skill, target_role, difficulty_level)
+        for skill in processed_skills
+    ]
 
-        all_questions.append(result)
+    try:
+        for index, future in enumerate(futures):
+            try:
+                result = future.result(timeout=SKILL_TASK_TIMEOUT_SECONDS)
+            except Exception:
+                failed += 1
+                continue
 
-    state["question_sets"] = all_questions
-    state["error"] = None
+            if result is None:
+                failed += 1
+                continue
+
+            results[index] = result
+            succeeded += 1
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
+
+    state["question_sets"] = [result for result in results if result is not None]
+    print(
+        f"skills processed={len(processed_skills)}, "
+        f"succeeded={succeeded}, failed={failed}"
+    )
+
+    if failed == len(processed_skills):
+        state["error"] = ALL_SKILLS_FAILED_MESSAGE
+    else:
+        state["error"] = None
 
     return state
 

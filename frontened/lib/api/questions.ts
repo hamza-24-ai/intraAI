@@ -17,7 +17,7 @@ export async function generateQuestionBank(difficulty: Difficulty, signal?: Abor
   const payload = generateQuestionsRequestSchema.parse({ ...context, difficulty_level: difficulty });
   useQuestionBankStore.getState().ensureContext(makeContextKey(payload));
 
-  const { data } = await api.post("/questions/generate", payload, { timeout: 120_000, signal }); // Tavily + LLM per skill
+  const { data } = await api.post("/questions/generate", payload, { timeout: 500_000, signal }); // Tavily + LLM per skill
   const res = generateQuestionsResponseSchema.parse(data);
 
   useQuestionBankStore.getState().setBank(difficulty, {
