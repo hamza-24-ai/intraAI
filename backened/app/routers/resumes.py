@@ -57,13 +57,13 @@ def resume_upload(
     state = resume_parser_agent(state)
 
     if state.get("error"):
+        error = state.get("error")
+        print(error)
         delete_transcript(public_id)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Data is unprocessable"
         )
-        error = state["error"]
-        print(error)
 
     parsed = {
         "skills" : state["skills"],
@@ -93,7 +93,7 @@ def resume_upload(
 
     return {
         "saved": resume is not None,
-        "resume_id": str(resume.id) if resume else None,
+        "resume_id": resume.id if resume else None,
         "parsed": parsed,
         "needs_manual_role_input": state["needs_manual_role_input"],
     }

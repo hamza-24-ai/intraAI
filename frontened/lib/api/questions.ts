@@ -1,4 +1,4 @@
-// src/lib/api/questions.ts
+// lib/api/questions.ts
 import { api } from "@/lib/api/client";
 import {
   generateQuestionsRequestSchema,
@@ -6,23 +6,26 @@ import {
   sessionQuestionsResponseSchema,
   type Difficulty,
 } from "@/lib/schemas";
+import { makeContextKey } from "@/lib/question-bank-utils";
 import { useQuestionBankStore } from "@/stores/question-bank-store";
 import { useResumeStore } from "@/stores/resume-store";
 
-export async function generateQuestionBank(difficulty: Difficulty) {
+export async function generateQuestionBank(difficulty: Difficulty, signal?: AbortSignal) {
   const context = useResumeStore.getState().getContextPayload();
   if (!context) throw new Error("Upload your resume (or add your skills) first.");
 
   const payload = generateQuestionsRequestSchema.parse({ ...context, difficulty_level: difficulty });
-  const { data } = await api.post("/questions/generate", payload, { timeout: 120_000 }); // Tavily + LLM per skill
+  useQuestionBankStore.getState().ensureContext(makeContextKey(payload));
+
+  const { data } = await api.post("/questions/generate", payload, { timeout: 120_000, signal }); // Tavily + LLM per skill
   const res = generateQuestionsResponseSchema.parse(data);
 
-  useQuestionBankStore.getState().setResult({
+  useQuestionBankStore.getState().setBank(difficulty, {
     questionSets: res.question_sets,
     sessionId: res.session_id,
     saved: res.saved,
     targetRole: res.target_role,
-    difficulty,
+    generatedAt: Date.now(),
   });
   return res;
 }

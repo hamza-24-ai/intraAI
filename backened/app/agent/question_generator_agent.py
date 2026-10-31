@@ -5,7 +5,7 @@ import os
 import json 
 from app.agent.state import Agent_Pipeline
 # from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_tavily import TavilyResearch
+from langchain_tavily import TavilySearch
 from pydantic import BaseModel,Field
 from dotenv import load_dotenv
 from typing import List
@@ -31,8 +31,8 @@ llm = ChatGroq(
 
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
-tavily_search = TavilyResearch(
-    api_key=TAVILY_API_KEY,
+tavily_search = TavilySearch(
+    tavily_api_key=TAVILY_API_KEY,
     max_results=5
 )
 
@@ -49,6 +49,9 @@ class QuestionSet(BaseModel):
 class GeneratedQuestion(BaseModel):
     skill : str = Field(description="Skill These questions are for")
     questions : List[QuestionSet] = Field("Questions Generated")
+    question_text: str = Field(description="The interview question")
+    difficulty_level: str = Field(description="beginner | intermediate | technical | deep")
+    answer_hint: str = Field(description="1-2 short sentences on what a strong answer should cover")
 
 
 parser = JsonOutputParser(pydantic_object=GeneratedQuestion)
@@ -73,12 +76,16 @@ Rules:
   do not mention the absence of search results in the output.
 - Do not repeat near-identical questions.
 
+
 Respond with ONLY valid JSON matching this structure:
 {{
   "skill": "skill name",
   "questions": [
     {{"question_text": "...", "difficulty_level": "..."}}
-  ]
+  ],
+  - For each question include "answer_hint": one or two short sentences on what a strong answer should cover (key points only, not the full answer).
+    ...
+    {{"question_text": "...", "difficulty_level": "...", "answer_hint": "..."}}
 }}"""),
     ("human", """Skill: {skill}
 Target role: {target_role}
@@ -105,11 +112,13 @@ def question_by_tavily(skill : str, target_role : str) -> str:
         return ""
 
 
-    if not results:
+    if not isinstance(results, dict):
         return ""
 
     context_part = []
-    for r in results:
+    for r in results.get("results", []):
+        if not isinstance(r, dict):
+            continue
         content = r.get("content", "")
         if content:
             context_part.append(content[:500])

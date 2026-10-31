@@ -26,6 +26,8 @@ def upload_transcript(file_bytes: bytes, filename: str):
     result = cloudinary.uploader.upload(
         file_bytes,
         resource_type="raw",
+        type="upload",
+        access_mode="public",
         public_id=public_id
     )
     return result["secure_url"], result["public_id"]

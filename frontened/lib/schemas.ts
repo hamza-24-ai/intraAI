@@ -120,6 +120,10 @@ export type ContextPayload = z.infer<typeof contextPayloadSchema>;
 export const generatedQuestionSchema = z.object({
   question_text: z.string(),
   difficulty_level: z.string(),
+  answer_hint: z
+    .string()
+    .nullish()
+    .transform((v) => v?.trim() || null),
 });
 export const questionSetSchema = z.object({
   skill: z.string(),

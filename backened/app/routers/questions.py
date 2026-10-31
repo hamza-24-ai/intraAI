@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import AliasChoices, BaseModel, Field
 
 from app.agent.question_generator_agent import question_generator_agent
 from app.models.interview_sessions import Interview_Session
@@ -22,12 +22,15 @@ class GenerateQuesyionRequest(BaseModel):
     resume_id : Optional[int] = None
     skills : Optional[List[str]] = None
     target_role : Optional[str] = None
-    difficulty : DifficultyLevel = DifficultyLevel.technical
+    difficulty_level : DifficultyLevel = Field(
+        default=DifficultyLevel.intermediate,
+        validation_alias=AliasChoices("difficulty_level", "difficulty"),
+    )
 
 
 @router.post("/generate")
 def generate_questions(
-    payload = GenerateQuesyionRequest,
+    payload : GenerateQuesyionRequest,
     db : Session = Depends(get_db),
     db_user = Depends(get_optional_db_user)
 ):
@@ -39,7 +42,7 @@ def generate_questions(
     state = {
         "skills" : skills,
         "target_role" : target_role,
-        "difficulty_level" : payload.difficulty.value
+        "difficulty_level" : payload.difficulty_level.value
     }
 
     state = question_generator_agent(state)
@@ -59,7 +62,7 @@ def generate_questions(
                 resume_id = resume_id,
                 mode = "question_bank",
                 interview_type = "technical",
-                difficulty_level = payload.difficulty.value,
+                difficulty_level = payload.difficulty_level.value,
                 duration_minutes = None,
                 status = "completed",
                 ended_at = datetime.utcnow()
@@ -72,20 +75,19 @@ def generate_questions(
         order = 0
 
         for qs in question_sets:
-            order +=1
-            for q in qs["questions"]:
+            for q in qs.get("questions", []):
+                order += 1
                 db.add(
                     Question(
                         session_id = session.id,
-                        skill = q["skill"],
+                        skill = qs.get("skill"),
                         question_text = q["question_text"],
                         question_type = "technical",
-                        difficulty_level = payload.difficulty.value,
-                        order_index = order
+                        difficulty_level = payload.difficulty_level.value,
+                        order_index = str(order)
                     )
                 )
         db.commit()
-        db.refresh(Question)
 
         session_id = session.id
 

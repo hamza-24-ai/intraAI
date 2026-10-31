@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 
-# Import all tables from models 
+# Import all tables from models
 from app.models.users import User
 from app.models.resumes import Resume
 from app.models.questions import Question

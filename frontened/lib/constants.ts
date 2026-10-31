@@ -2,7 +2,7 @@
 
 // lib/constants.ts
 // Cosmetic countdown only. The real timer lives in the backend (ANSWER_TIMEOUT_SECONDS).
-import type { ExperienceLevel } from "@/lib/schemas";
+import type { Difficulty, ExperienceLevel } from "@/lib/schemas";
 
 
 export const SILENCE_LIMIT_MS = 20_000;
@@ -33,4 +33,16 @@ export const EXPERIENCE_OPTIONS: { value: ExperienceLevel; label: string }[] = [
   { value: "junior", label: "Junior" },
   { value: "mid", label: "Mid" },
   { value: "senior", label: "Senior" },
+];
+
+export const DIFFICULTY_OPTIONS: {
+  value: Difficulty;
+  label: string;
+  description: string;
+  level: 1 | 2 | 3 | 4;
+}[] = [
+  { value: "beginner", label: "Beginner", description: "Core concepts and definitions", level: 1 },
+  { value: "intermediate", label: "Intermediate", description: "Practical, everyday questions", level: 2 },
+  { value: "technical", label: "Technical", description: "Problem solving and trade-offs", level: 3 },
+  { value: "deep", label: "Deep", description: "Internals and edge cases", level: 4 },
 ];

@@ -16,7 +16,7 @@ def resolve_resume(db, db_user, skills, target_role, resume_id):
             db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == db_user.id).first()
         )
 
-        if resume.id is None:
+        if resume is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Resume Not found"

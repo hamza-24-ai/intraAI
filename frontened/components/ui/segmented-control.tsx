@@ -2,12 +2,12 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { useId, useRef } from "react";
+import { useId, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface Option<T extends string> {
   value: T;
-  label: string;
+  label: ReactNode;
 }
 
 interface SegmentedControlProps<T extends string> {

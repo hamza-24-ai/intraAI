@@ -31,13 +31,13 @@ Given raw resume text, extract:
 5. projects — short titles of any projects mentioned.
 
 Respond with ONLY a valid JSON object, no other text:
-{
+{{
   "skills": ["skill1", "skill2"],
   "target_role": "role or null",
   "role_source": "headline" | "inferred_from_skills" | "unknown",
   "experience_level": "student" | "fresh_grad" | "junior" | "mid" | "senior",
   "projects": ["project1", "project2"]
-}"""
+}}"""
 
 
 # =====================================================
@@ -56,7 +56,7 @@ resume_chain = response_data | llm
 
 def download_file_temp(file_url : str, file_type : str) -> str:
 
-    response = requests.get(file_url, timeout=15)
+    response = requests.get(file_url, timeout=300)
     response.raise_for_status()
 
     suffix = f".{file_type}"
@@ -90,26 +90,45 @@ def extract_text_with_langchain(file_path : str, file_type : str) -> str:
 def cleanup_temp_file(filepath : str):
     try:
         os.remove(filepath)
-    except:
-        OSError
+    except OSError:
+        pass
 
 
 # ====================================
 # Resume Parser LLM 
 
-def call_resume_parser_llm(raw_text : str) -> dict:
-    # chain ko invoke krna 
-    response = resume_chain.invoke({"raw_text" : raw_text})
+# def call_resume_parser_llm(raw_text : str) -> dict:
+#     # chain ko invoke krna 
+#     response = resume_chain.invoke({"raw_text" : raw_text})
 
-    # Getting output from response 
-    output = response.content.strip()
+#     # Getting output from response 
+#     output = response.content.strip()
 
-    # Output ko clean krna json ma taake dictionary ki form ma jaee 
+#     # Output ko clean krna json ma taake dictionary ki form ma jaee 
+#     if output.startswith("```"):
+#         output = output.strip("`")
+#         if output.startswith("json"):
+#             output = output[4:].strip()
+
+
+#     return json.loads(output)
+
+def call_resume_parser_llm(raw_text: str) -> dict:
+    response = resume_chain.invoke({"raw_text": raw_text})
+
+    content = response.content
+    if isinstance(content, list):
+        content = "".join(
+            part.get("text", "") if isinstance(part, dict) else str(part)
+            for part in content
+        )
+
+    output = content.strip()
     if output.startswith("```"):
         output = output.strip("`")
         if output.startswith("json"):
-            output = output[4:].strip()
-
+            output = output[4:]
+        output = output.strip()
 
     return json.loads(output)
 
