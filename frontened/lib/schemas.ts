@@ -2,7 +2,7 @@
 
 // lib/schemas.ts
 import { z } from "zod";
-import { MAX_RESUME_BYTES, MAX_SKILLS } from "@/lib/constants";
+import { MAX_RESUME_BYTES, MAX_SELECTED_SKILLS, MAX_SKILLS } from "@/lib/constants";
 
 /* ---------- shared enums ---------- */
 export const difficultySchema = z.enum(["beginner", "intermediate", "technical", "deep"]);
@@ -90,6 +90,12 @@ export const resumeSchema = z.object({
 });
 export type Resume = z.infer<typeof resumeSchema>;
 
+export const resumeSkillsResponseSchema = z.object({
+  resume_id: z.number(),
+  skills: z.array(z.string()),
+});
+export type ResumeSkillsResponse = z.infer<typeof resumeSkillsResponseSchema>;
+
 export function validateResumeFile(file: File): string | null {
   const ext = file.name.split(".").pop()?.toLowerCase();
   if (ext !== "pdf" && ext !== "docx") return "Only PDF and DOCX files are allowed.";
@@ -133,6 +139,7 @@ export type QuestionSet = z.infer<typeof questionSetSchema>;
 
 export const generateQuestionsRequestSchema = contextPayloadSchema.extend({
   difficulty_level: difficultySchema,
+  selected_skills: z.array(z.string().trim().min(1).max(64)).max(MAX_SELECTED_SKILLS).optional(),
 });
 export const generateQuestionsResponseSchema = z.object({
   saved: z.boolean(),

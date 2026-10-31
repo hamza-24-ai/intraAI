@@ -22,7 +22,7 @@ import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useRequireResume } from "@/hooks/use-require-resume";
 import { getErrorMessage } from "@/lib/api/client";
 import { generateQuestionBank } from "@/lib/api/questions";
-import { DIFFICULTY_OPTIONS } from "@/lib/constants";
+import { DIFFICULTY_OPTIONS, MAX_SELECTED_SKILLS } from "@/lib/constants";
 import {
   filterSets,
   findMissingSkills,
@@ -94,6 +94,9 @@ export function QuestionBankView() {
     };
   });
 
+  const [selectedSkills, setSelectedSkills] = useState<string[]>(() =>
+    initial.skills.slice(0, MAX_SELECTED_SKILLS)
+  );
   const [status, setStatus] = useState<Status>("idle");
   const [errorKind, setErrorKind] = useState<ErrorKind | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -108,11 +111,12 @@ export function QuestionBankView() {
   const autoRetriedRef = useRef(false);
   const offlineAtErrorRef = useRef(false);
   const errorDifficultyRef = useRef<Difficulty | null>(null);
+  const lastSelectionRef = useRef<string[]>(selectedSkills);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
+  const [generatingSkills, setGeneratingSkills] = useState<string[]>([]);
   const skillsCount = initial.skills.length;
-  const requestedSkills = initial.skills;
 
   useEffect(() => {
     if (!initial.payload) return;
@@ -132,25 +136,27 @@ export function QuestionBankView() {
   }, [successTick]);
 
   const runGeneration = useCallback(
-    async (difficulty: Difficulty) => {
+    async (difficulty: Difficulty, selection: string[]) => {
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
+      lastSelectionRef.current = selection;
       offlineAtErrorRef.current = false;
+      setGeneratingSkills(selection);
       setStatus("generating");
       setErrorKind(null);
       setErrorMessage("");
       setAnnouncement(
-        `Generating questions for ${skillsCount} ${skillsCount === 1 ? "skill" : "skills"}.`
+        `Generating questions for ${selection.length} ${selection.length === 1 ? "skill" : "skills"}.`
       );
 
       try {
-        await generateQuestionBank(difficulty, controller.signal);
+        await generateQuestionBank(difficulty, controller.signal, selection);
         if (controller.signal.aborted) return;
         setStatus("idle");
         setSuccessTick((value) => value + 1);
         setAnnouncement(
-          `Questions ready for ${skillsCount} ${skillsCount === 1 ? "skill" : "skills"}.`
+          `Questions ready for ${selection.length} ${selection.length === 1 ? "skill" : "skills"}.`
         );
         toast.success("Questions ready");
       } catch (error: unknown) {
@@ -165,7 +171,7 @@ export function QuestionBankView() {
         if (abortRef.current === controller) abortRef.current = null;
       }
     },
-    [skillsCount]
+    []
   );
 
   // Retry automatically once if the request failed while the device was offline.
@@ -175,7 +181,7 @@ export function QuestionBankView() {
     autoRetriedRef.current = true;
     toast.info("Back online, retrying.");
     const difficulty = errorDifficultyRef.current;
-    if (difficulty) void runGeneration(difficulty);
+    if (difficulty) void runGeneration(difficulty, lastSelectionRef.current);
   }, [status, errorKind, online, runGeneration]);
 
   const isGuest = authHydrated && !isAuthenticated;
@@ -194,6 +200,7 @@ export function QuestionBankView() {
   }, [banks, exportedAt, isGuest]);
 
   const activeEntry = banks[activeDifficulty] ?? null;
+  const requestedSkills = activeEntry?.selectedSkills ?? initial.skills;
 
   const generatedDifficulties = useMemo(
     () => (Object.keys(banks) as Difficulty[]).filter((difficulty) => banks[difficulty]),
@@ -250,10 +257,10 @@ export function QuestionBankView() {
     skillsCount === 1 ? "skill" : "skills"
   }`;
 
-  const startGeneration = (difficulty: Difficulty) => {
+  const startGeneration = (difficulty: Difficulty, selection: string[]) => {
     autoRetriedRef.current = false;
     errorDifficultyRef.current = difficulty;
-    void runGeneration(difficulty);
+    void runGeneration(difficulty, selection);
   };
 
   const handlePickDifficulty = (difficulty: Difficulty) => {
@@ -316,6 +323,13 @@ export function QuestionBankView() {
           )
         ) : null}
 
+        {activeEntry ? (
+          <p className="mt-2 text-sm font-medium text-slate-dark">
+            Based on: {activeEntry.selectedSkills.length}{" "}
+            {activeEntry.selectedSkills.length === 1 ? "skill" : "skills"}
+          </p>
+        ) : null}
+
         <p role="status" aria-live="polite" className="sr-only">
           {announcement}
         </p>
@@ -326,13 +340,15 @@ export function QuestionBankView() {
         {!online ? <OfflineBanner className="mt-4" /> : null}
 
         {status === "generating" ? (
-          <GeneratingState skills={requestedSkills} onCancel={handleCancel} />
+          <GeneratingState skills={generatingSkills} onCancel={handleCancel} />
         ) : status === "error" ? (
           <GenerationError
             message={errorMessage}
             online={online}
             retrying={false}
-            onRetry={() => startGeneration(errorDifficultyRef.current ?? activeDifficulty)}
+            onRetry={() =>
+              startGeneration(errorDifficultyRef.current ?? activeDifficulty, lastSelectionRef.current)
+            }
             onBack={() => router.push("/resume/confirm")}
           />
         ) : activeEntry ? (
@@ -369,7 +385,14 @@ export function QuestionBankView() {
                     title="No questions came back"
                     description="The search did not return questions for these skills. Try generating the bank again."
                     actionLabel="Generate again"
-                    onAction={() => startGeneration(activeDifficulty)}
+                    onAction={() =>
+                      startGeneration(
+                        activeDifficulty,
+                        activeEntry.selectedSkills.length > 0
+                          ? activeEntry.selectedSkills
+                          : selectedSkills
+                      )
+                    }
                     disabled={!online}
                   />
                 )}
@@ -419,7 +442,10 @@ export function QuestionBankView() {
             onChange={handlePickDifficulty}
             completed={generatedDifficulties}
             offline={!online}
-            onGenerate={() => startGeneration(activeDifficulty)}
+            onGenerate={() => startGeneration(activeDifficulty, selectedSkills)}
+            skills={initial.skills}
+            selectedSkills={selectedSkills}
+            onSelectionChange={setSelectedSkills}
           />
         )}
       </div>
@@ -433,7 +459,10 @@ export function QuestionBankView() {
         cancelLabel="Keep them"
         onConfirm={() => {
           setConfirmOpen(false);
-          startGeneration(activeDifficulty);
+          startGeneration(
+            activeDifficulty,
+            activeEntry?.selectedSkills.length ? activeEntry.selectedSkills : selectedSkills
+          );
         }}
       />
     </section>

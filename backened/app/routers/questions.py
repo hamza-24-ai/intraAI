@@ -1,8 +1,12 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import AliasChoices, BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field, field_validator
 
-from app.agent.question_generator_agent import ALL_SKILLS_FAILED_MESSAGE, question_generator_agent
+from app.agent.question_generator_agent import (
+    ALL_SKILLS_FAILED_MESSAGE,
+    MAX_SKILLS_PER_GENERATION,
+    question_generator_agent,
+)
 from app.models.interview_sessions import Interview_Session
 from app.models.questions import Question
 from app.cores.database import get_db
@@ -18,14 +22,86 @@ router = APIRouter(
 )
 
 
+MAX_SELECTED_SKILLS = MAX_SKILLS_PER_GENERATION
+MAX_SELECTED_SKILL_LENGTH = 64
+
+
 class GenerateQuesyionRequest(BaseModel):
     resume_id : Optional[int] = None
     skills : Optional[List[str]] = None
+    selected_skills : Optional[List[str]] = None
     target_role : Optional[str] = None
     difficulty_level : DifficultyLevel = Field(
         default=DifficultyLevel.intermediate,
         validation_alias=AliasChoices("difficulty_level", "difficulty"),
     )
+
+    @field_validator("selected_skills")
+    @classmethod
+    def validate_selected_skills(cls, value : Optional[List[str]]):
+
+        if value is None:
+            return value
+
+        if len(value) > MAX_SELECTED_SKILLS:
+            raise ValueError(f"Select at most {MAX_SELECTED_SKILLS} skills.")
+
+        cleaned_skills = []
+
+        for raw_skill in value:
+            skill = (raw_skill or "").strip()
+
+            if not skill:
+                raise ValueError("Selected skills cannot be empty.")
+
+            if len(skill) > MAX_SELECTED_SKILL_LENGTH:
+                raise ValueError(
+                    f"Each selected skill must be {MAX_SELECTED_SKILL_LENGTH} characters or fewer."
+                )
+
+            cleaned_skills.append(skill)
+
+        return cleaned_skills
+
+
+def skill_key(skill : str) -> str:
+    return " ".join(skill.casefold().split())
+
+
+def apply_skill_selection(available_skills : List[str], selected_skills : List[str]) -> List[str]:
+    """Keep the resume's spelling; drop selections that do not match it."""
+
+    available = {}
+
+    for skill in available_skills:
+        if not isinstance(skill, str):
+            continue
+
+        stored_skill = skill.strip()
+
+        if stored_skill:
+            available.setdefault(skill_key(stored_skill), stored_skill)
+
+    selected = []
+    seen = set()
+
+    for raw_skill in selected_skills:
+        key = skill_key(raw_skill)
+        stored_skill = available.get(key)
+
+        if stored_skill is None or key in seen:
+            continue
+
+        seen.add(key)
+        selected.append(stored_skill)
+
+    if not selected:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="None of the selected skills match your resume. Choose skills from the list."
+        )
+
+    return selected
 
 
 @router.post("/generate")
@@ -38,6 +114,9 @@ def generate_questions(
     skills,target_role,resume_id = resolve_resume(
         db, db_user,payload.skills, payload.target_role,payload.resume_id
     )
+
+    if payload.selected_skills:
+        skills = apply_skill_selection(skills, payload.selected_skills)
 
     state = {
         "skills" : skills,

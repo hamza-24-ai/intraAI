@@ -5,6 +5,7 @@ import type { Difficulty, QuestionSet } from "@/lib/schemas";
 
 export interface QuestionBankEntry {
   questionSets: QuestionSet[];
+  selectedSkills: string[];
   sessionId: number | null;
   saved: boolean;
   targetRole: string | null;

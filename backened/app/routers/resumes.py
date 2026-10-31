@@ -114,6 +114,34 @@ def list_resumes(
 
 
 
+# Get the stored skills of a resume (same owner check as resume_context.py)
+
+@router.get("/{resume_id}/skills")
+def resume_skills(
+    resume_id : int,
+    db : Session = Depends(get_db),
+    current_user = Depends(get_db_user)
+):
+
+    resume = (
+        db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == current_user.id).first()
+    )
+
+    if resume is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+
+    parsed = resume.parsed_skills or {}
+    skills = parsed.get("skills", []) if isinstance(parsed, dict) else []
+
+    return {
+        "resume_id": resume.id,
+        "skills": [skill for skill in skills if isinstance(skill, str) and skill.strip()]
+    }
+
+
 # Get Resume detail by ID 
 
 @router.get("/{resume_id}", response_model=ResumeResponse)

@@ -2,6 +2,7 @@
 import { api } from "@/lib/api/client";
 import {
   resumeSchema,
+  resumeSkillsResponseSchema,
   uploadResumeResponseSchema,
   validateResumeFile,
   type Resume,
@@ -47,4 +48,9 @@ export async function listResumes(): Promise<Resume[]> {
 export async function getResume(id: number): Promise<Resume> {
   const { data } = await api.get(`/resume/${id}`);
   return resumeSchema.parse(data);
+}
+
+export async function getResumeSkills(resumeId: number) {
+  const { data } = await api.get(`/resume/${resumeId}/skills`);
+  return resumeSkillsResponseSchema.parse(data);
 }

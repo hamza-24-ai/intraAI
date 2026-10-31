@@ -15,6 +15,9 @@ export const DEFAULT_AFTER_LOGIN = "/resume";
 export const LIVE_INTERVIEW_SKILL_LIMIT = 4;
 export const MAX_SKILLS = 30;
 
+// Keep in sync with MAX_SKILLS_PER_GENERATION in the backend.
+export const MAX_SELECTED_SKILLS = 10;
+
 export const ROLE_SUGGESTIONS = [
   "Frontend Developer",
   "Full Stack Developer",

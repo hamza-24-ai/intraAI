@@ -10,11 +10,19 @@ import { makeContextKey } from "@/lib/question-bank-utils";
 import { useQuestionBankStore } from "@/stores/question-bank-store";
 import { useResumeStore } from "@/stores/resume-store";
 
-export async function generateQuestionBank(difficulty: Difficulty, signal?: AbortSignal) {
+export async function generateQuestionBank(
+  difficulty: Difficulty,
+  signal?: AbortSignal,
+  selectedSkills?: string[]
+) {
   const context = useResumeStore.getState().getContextPayload();
   if (!context) throw new Error("Upload your resume (or add your skills) first.");
 
-  const payload = generateQuestionsRequestSchema.parse({ ...context, difficulty_level: difficulty });
+  const payload = generateQuestionsRequestSchema.parse({
+    ...context,
+    difficulty_level: difficulty,
+    ...(selectedSkills && selectedSkills.length > 0 ? { selected_skills: selectedSkills } : {}),
+  });
   useQuestionBankStore.getState().ensureContext(makeContextKey(payload));
 
   const { data } = await api.post("/questions/generate", payload, { timeout: 500_000, signal }); // Tavily + LLM per skill
@@ -22,6 +30,7 @@ export async function generateQuestionBank(difficulty: Difficulty, signal?: Abor
 
   useQuestionBankStore.getState().setBank(difficulty, {
     questionSets: res.question_sets,
+    selectedSkills: selectedSkills ?? res.question_sets.map((set) => set.skill),
     sessionId: res.session_id,
     saved: res.saved,
     targetRole: res.target_role,
